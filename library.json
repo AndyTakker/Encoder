@@ -1,0 +1,19 @@
+{
+  "name": "Encoder",
+  "version": "1.0.0",
+  "description": "Bare-metal encoder for CH32V003 and WCH RISC-V MCUs.",
+  "keywords": ["encoder", "CH32V003", "WCH", "RISC-V", "bare-metal"],
+  "authors": {
+    "name": "A. Kolesov",
+    "maintainer": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndyTakker/Encoder.git"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/AndyTakker/Encoder",
+  "frameworks": "*",
+  "platforms": ["wch-riscv"],
+  "headers": ["Encoder.h"]
+}
