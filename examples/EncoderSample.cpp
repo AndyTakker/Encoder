@@ -1,14 +1,11 @@
-// #define USE_GPIO_LIB
+//============================================================= (c) A.Kolesov ==
+// Пример использования библиотеки энкодера
+//------------------------------------------------------------------------------
 #include "Encoder.h"
 #include <debug.h>
 
 // Подключаем энкодер. Для смены направления сменить порядок пинов
-#ifdef USE_GPIO_LIB
-#include <gpio.h>
 Encoder encoder(PC4, PC3);
-#else
-Encoder encoder({GPIOC, GPIO_Pin_4}, {GPIOC, GPIO_Pin_3});
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,16 +16,10 @@ extern "C" {
 // положение энкодера.
 // Сюда же можно добавить обработчики прерываний с других входов.
 //------------------------------------------------------------------------------
-#ifdef USE_GPIO_LIB
-PIN_INT_ISR {
-  encoder.refresh(); // Вызываем функцию обработки энкодера.
-}
-#else
 void EXTI7_0_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void EXTI7_0_IRQHandler(void) {
   encoder.refresh(); // Вызываем функцию обработки энкодера.
 }
-#endif
 
 #ifdef __cplusplus
 }
