@@ -3,20 +3,9 @@
 Encoder::Encoder(PinName pinDT, PinName pinCLK) {
   _pinDt = pinDT;
   _pinClk = pinCLK;
-}
-
-void Encoder::init() {
   encPos = 0;
-  portSetting(); // Порты на вход с подтяжкой и прерывание
-}
-
-//==============================================================================
-// Настройка пинов энкодера - порты и прерывания от них.
-//------------------------------------------------------------------------------
-void Encoder::portSetting() {
   pinMode(_pinDt, GPIO_Mode_IPU);
   pinMode(_pinClk, GPIO_Mode_IPU);
-
   pinExtiInit(_pinDt);
   pinExtiInit(_pinClk);
 }

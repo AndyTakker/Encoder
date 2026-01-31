@@ -35,7 +35,7 @@ int main() {
   printf("   ChipID: %08lx\r\n", DBGMCU_GetCHIPID()); // Для посмотреть ID чипа, от нефиг делать
 #endif
 
-  encoder.init(); // Настройка портов энкодера и прерываний и пр.
+  // encoder.init(); // Настройка портов энкодера и прерываний и пр.
   while (1) {
 #ifdef LOG_ENABLE
     printf("Encoder: %ld\r\n", encoder.encPos);

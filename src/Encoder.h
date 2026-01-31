@@ -25,11 +25,9 @@ class Encoder {
   private:
   PinName _pinDt;
   PinName _pinClk;
-  void portSetting();
 
   public:
   volatile int32_t encPos = 0; // Положение энкодера
   Encoder(PinName pinDT, PinName pinCLK);
-  void init(void);
   void refresh();
 };
