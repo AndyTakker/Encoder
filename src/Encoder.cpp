@@ -19,11 +19,21 @@ void Encoder::refresh() {
   static uint8_t lastState = 0;
   uint8_t pin0 = 0, pin1 = 0;
 
-  if (EXTI_GetITStatus(extiLine(_pinDt)) != RESET || EXTI_GetITStatus(extiLine(_pinClk)) != RESET) {
-    pin0 = pinRead(_pinDt);
-    pin1 = pinRead(_pinClk);
+  ITStatus stDt = EXTI_GetITStatus(extiLine(_pinDt));
+  ITStatus stClk = EXTI_GetITStatus(extiLine(_pinClk));
+
+  if (stDt == RESET && stClk == RESET) { // Прерывание не от наших пинов
+    return;
   }
-  EXTI_ClearITPendingBit(extiLine(_pinDt) | extiLine(_pinClk));
+  pin0 = pinRead(_pinDt);
+  pin1 = pinRead(_pinClk);
+  
+  if (stDt == SET) {
+    EXTI_ClearITPendingBit(extiLine(_pinDt));
+  }
+  if (stClk == SET) {
+    EXTI_ClearITPendingBit(extiLine(_pinClk));
+  }
 
   uint8_t state = pin0 | pin1 << 1;
 
