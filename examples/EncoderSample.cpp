@@ -1,11 +1,14 @@
 //============================================================= (c) A.Kolesov ==
 // Пример использования библиотеки энкодера
 //------------------------------------------------------------------------------
-#include "Encoder.h"
+#include <Encoder.h>
+#include <Logs.h>
+#include <SysClock.h>
 #include <debug.h>
 
 // Подключаем энкодер. Для смены направления сменить порядок пинов
-Encoder encoder(PC4, PC3);
+// Encoder encoder(PC4, PC3);                  // Если нужно только положение энкодера
+Encoder encoder(PC4, PC3, Sysclock.Millis); // Если нужно мерять скорость вращения
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,17 +32,17 @@ int main() {
   SystemCoreClockUpdate();
 
 #ifdef LOG_ENABLE
-  Delay_Init();
   USART_Printf_Init(115200);
-  printf("SystemClk: %lu\r\n", SystemCoreClock);      // Для посмотреть частоту процесора (48мГц)
-  printf("   ChipID: %08lx\r\n", DBGMCU_GetCHIPID()); // Для посмотреть ID чипа, от нефиг делать
+  logs("SystemClk: %lu\r\n", SystemCoreClock);        // Для посмотреть частоту процесора (48мГц)
+  logs("   ChipID: 0x%08lX\r\n", DBGMCU_GetCHIPID()); // Для посмотреть ID чипа, от нефиг делать
 #endif
 
-  // encoder.init(); // Настройка портов энкодера и прерываний и пр.
+  // encoder.setAccurateMode(true); // Режим повышенной точности выключен по умолчанию
+
   while (1) {
 #ifdef LOG_ENABLE
-    printf("Encoder: %ld\r\n", encoder.encPos);
-    Delay_Ms(500);
+    logs("Encoder: %ld, Speed: %ld \r\n", encoder.encPos, encoder.getSpeed());
+    delay(200);
 #endif
   }
 }
