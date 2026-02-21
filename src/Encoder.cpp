@@ -5,10 +5,14 @@ Encoder::Encoder(PinName pinDT, PinName pinCLK, uint32_t (*timeFunc)()) {
   _pinClk = pinCLK;
   _timeFunc = timeFunc; // Функция измерения времени
   encPos = 0;
-  pinMode(_pinDt, GPIO_Mode_IPU);
+  // pinMode(_pinDt, GPIO_Mode_IN_FLOATING); // Для энкодера с конденсаторами
+  // pinMode(_pinClk, GPIO_Mode_IN_FLOATING);
+  pinMode(_pinDt, GPIO_Mode_IPU); // Для голого энкодера (с кондерами тоже работает)
   pinMode(_pinClk, GPIO_Mode_IPU);
-  pinExtiInit(_pinDt);
-  pinExtiInit(_pinClk);
+  pinExtiInit(_pinDt, EXTI_Trigger_Falling); // Для энкодера с высоким уровнем в состоянии покоя
+  pinExtiInit(_pinClk, EXTI_Trigger_Falling);
+  // pinExtiInit(_pinDt);  // Для энкодеров с низким уровнем в состоянии покоя
+  // pinExtiInit(_pinClk);
 }
 
 //==============================================================================
@@ -18,7 +22,8 @@ Encoder::Encoder(PinName pinDT, PinName pinCLK, uint32_t (*timeFunc)()) {
 //------------------------------------------------------------------------------
 void Encoder::refresh() {
   static uint8_t lastState = 0;
-  uint8_t pin0 = 0, pin1 = 0;
+  uint8_t pin0, pin1;
+  int32_t delta = 0;
 
   ITStatus stDt = EXTI_GetITStatus(extiLine(_pinDt));
   ITStatus stClk = EXTI_GetITStatus(extiLine(_pinClk));
@@ -28,31 +33,19 @@ void Encoder::refresh() {
   }
   pin0 = pinRead(_pinDt);
   pin1 = pinRead(_pinClk);
-
-  if (stDt != RESET) {
-    EXTI_ClearITPendingBit(extiLine(_pinDt));
-  }
-  if (stClk != RESET) {
-    EXTI_ClearITPendingBit(extiLine(_pinClk));
-  }
   uint8_t state = pin0 | pin1 << 1;
 
-  // Таблица инкрементов для режима повышенной точности
-  const int8_t increment[16] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
-
-  int32_t delta = 0;
-
-  if (!_accurateMode) {
-    if (lastState == 1 && state == 3) {
-      delta = 1;
-    } else if (lastState == 3 && state == 1) {
+  delta = 0;
+  // Логика для энкодера E4High
+  if (state == 0b00) { // Состояние в котором нужно делать инкремент/декремент
+    if (lastState == 0b01) {
       delta = -1;
-    }
-  } else {
-    if (state != lastState) {
-      delta = -increment[(state | (lastState << 2)) & 0x0F];
+    } else if (lastState == 0b10) {
+      delta = 1;
     }
   }
+
+  lastState = state;
 
   // Обновляем позицию и скорость только при изменении
   if (delta != 0) {
@@ -63,9 +56,9 @@ void Encoder::refresh() {
       uint32_t dt = now - _lastTime;
 
       int32_t dir = delta > 0 ? 1 : (delta < 0 ? -1 : 0); // Направление
-      if (_lastDirection != dir) { // Если направление изменилось
-        _speed = 0;                // Скорость - ноль
-        dt = 0;                    // Время - ноль
+      if (_lastDirection != dir) {                        // Если направление изменилось
+        _speed = 0;                                       // Скорость - ноль
+        dt = 0;                                           // Время - ноль
       }
       _lastDirection = dir;
 
@@ -81,7 +74,15 @@ void Encoder::refresh() {
       _lastPos = encPos;
     }
   }
-  lastState = state;
+
+  // Чистим флаги прерывания от пинов энкодера в самом конце, т.е. после того,
+  // как обработаем текущее вращение.
+  if (stDt != RESET) {
+    EXTI_ClearITPendingBit(extiLine(_pinDt));
+  }
+  if (stClk != RESET) {
+    EXTI_ClearITPendingBit(extiLine(_pinClk));
+  }
 }
 
 //==============================================================================
@@ -103,11 +104,4 @@ int32_t Encoder::getSpeed() const {
 void Encoder::resetSpeed() {
   _speed = 0;
   _lastTime = (_timeFunc) ? _timeFunc() : 0;
-}
-
-//==============================================================================
-// Включить режим повышенной точности (true - вкл, false - выкл)
-//------------------------------------------------------------------------------
-void Encoder::setAccurateMode(bool accurateMode) {
-  _accurateMode = accurateMode;
 }

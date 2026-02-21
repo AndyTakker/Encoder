@@ -37,8 +37,6 @@ int main() {
   logs("   ChipID: 0x%08lX\r\n", DBGMCU_GetCHIPID()); // Для посмотреть ID чипа, от нефиг делать
 #endif
 
-  // encoder.setAccurateMode(true); // Режим повышенной точности выключен по умолчанию
-
   while (1) {
 #ifdef LOG_ENABLE
     logs("Encoder: %ld, Speed: %ld \r\n", encoder.encPos, encoder.getSpeed());
